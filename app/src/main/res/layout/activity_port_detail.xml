@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activity.PortDetailActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:id="@+id/port_detail_bar">
+        <TextView
+            android:id="@+id/tv_port"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            android:textColor="@color/colorPrimaryText"
+            android:textSize="30sp"
+            tools:text="串口设备：/dev/ttyS1" />
+
+        <TextView
+            android:id="@+id/tv_bt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            android:textColor="@color/colorPosition"
+            android:textSize="30sp"
+            android:text="@string/bt" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/bt_port_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/colorAccent"
+        app:backgroundTint="@color/colorAccent"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_margin="16dp"
+        app:elevation="8dp"
+        app:pressedTranslationZ="16dp"
+        app:borderWidth="0dp"
+        android:src="@drawable/ic_baseline_play_arrow_36"
+        app:layout_anchor="@id/port_detail_bar"
+        app:layout_anchorGravity="bottom|right"
+        android:layout_alignParentRight="true" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/msg_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

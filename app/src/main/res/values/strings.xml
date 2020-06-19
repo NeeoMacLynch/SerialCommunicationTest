@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">ECGtest</string>
+    <string name="ecg">ECG测试</string>
+    <string name="ecg_message">size：%1$d 数据监听：%2$s</string>
+    <string name="open_port">打开串口</string>
+    <string name="close_port">关闭串口</string>
+    <string name="no_serial_device">找不到串口设备</string>
+    <string name="hint">点击卡片查看详情</string>
+    <string name="serial_port">串口设备</string>
+    <string name="device_path_text">串口地址：%s</string>
+    <string name="bt">波特率：115200</string>
+    <string name="msg_item_title">命令：</string>
+</resources>
