@@ -31,7 +31,7 @@ public class PortDetailActivity extends AppCompatActivity {
     private int backPressedTime = 0; //返回键触发次数
     private long mExitTime = System.currentTimeMillis();
 
-    public static Handler handler;
+    public static Handler handler = new Handler();
 
     private String devicePath;
     private boolean isOpened = false;

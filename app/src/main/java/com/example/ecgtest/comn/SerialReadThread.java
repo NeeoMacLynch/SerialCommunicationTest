@@ -30,64 +30,61 @@ public class SerialReadThread extends Thread {
     public static Handler handler = new Handler();
     private BufferedInputStream inputStream;
 
+    private byte[] received = new byte[1];
+    private int size;
+
     public SerialReadThread(InputStream is) {
         inputStream = new BufferedInputStream(is);
     }
 
     @Override
     public void run() {
-        byte[] received = new byte[1];
-        int size;
-        String hexStr;
+
+        Thread dataProcessingThread = new Thread(runnable);
 
         Log.e(TAG,"开始读线程");
-
+        dataProcessingThread.start();
         while (!Thread.currentThread().isInterrupted()) {
+
             try {
                 int available = inputStream.available();
 
                 if (available > 0) {
                     size = inputStream.read(received);
+
                     if (size > 0) {
-
-                        hexStr = onDataReceive(received, size);
-
-                        String finalHexStr = hexStr;
-
-                        //新线程内进行数据解析
-                        Runnable runnable = () -> {
-                            packData(finalHexStr);
-                            if (dataPack.size() == PACK_SIZE) {
-                                if (DataUtils.checkDataPack(dataPack)){
-                                    //每次发送message必须重新构造message对象
-                                    Message msg = Message.obtain();
-                                    msg.obj = DataUtils.unPackData(dataPack);
-                                    //调用PortDetailActivity中的静态handler
-                                    PortDetailActivity.handler.sendMessage(msg);
-                                }
-                                dataPack.clear();
-                            }
-                        };
-                        runnable.run();
-
+                        dataProcessingThread.run();
                     }
                 } else {
                     // 暂停时间，防止循环导致CPU占用率过高
                     SystemClock.sleep(1);
                 }
+
             } catch (IOException e) {
                 Log.e(TAG,"读取数据失败", e);
-
-                Message msg = Message.obtain();
-                msg.obj = "读取数据失败" + e; // 消息内存存放
-                //调用PortDetailActivity中的静态handler
-                PortDetailActivity.handler.sendMessage(msg);
             }
 
         }
 
         Log.d(TAG,"结束读进程");
     }
+
+    /**
+     * 新线程内进行数据解析
+     * */
+    private Runnable runnable = () -> {
+        packData(onDataReceive(received, size));
+        if (dataPack.size() == PACK_SIZE) {
+            if (DataUtils.checkDataPack(dataPack)){
+                //每次发送message必须重新构造message对象
+                Message msg = Message.obtain();
+                msg.obj = DataUtils.unPackData(dataPack);
+                //调用PortDetailActivity中的静态handler
+                PortDetailActivity.handler.sendMessage(msg);
+            }
+            dataPack.clear();
+        }
+    };
 
     /**
      * 停止读线程
