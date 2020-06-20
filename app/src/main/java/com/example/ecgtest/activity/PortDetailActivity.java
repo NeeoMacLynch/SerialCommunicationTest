@@ -39,7 +39,7 @@ public class PortDetailActivity extends AppCompatActivity {
     private boolean isOpened = false;
 
     private Device device;
-    private List<String> recyclerContents;
+    private List<String> recyclerContents = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,7 +85,7 @@ public class PortDetailActivity extends AppCompatActivity {
         if (isOpened){
             SerialPortUtils.instance().close();
             isOpened = false;
-
+            initMsgList("串口已关闭");
             Toast.makeText(this, "串口已关闭", Toast.LENGTH_LONG).show();
             //updateViewState(isOpened);
         } else {
@@ -95,7 +95,6 @@ public class PortDetailActivity extends AppCompatActivity {
             isOpened = serialPort != null;
             if (isOpened) {
                 Toast.makeText(this, "成功打开串口", Toast.LENGTH_SHORT).show();
-                recyclerContents = new ArrayList<>();
                 initMsgList("成功打开串口");
                 getMessage(serialPort);
 
