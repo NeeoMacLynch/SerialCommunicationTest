@@ -18,7 +18,6 @@ import com.example.ecgtest.R;
 import com.example.ecgtest.adapter.MsgListAdapter;
 import com.example.ecgtest.bean.Device;
 import com.example.ecgtest.comn.SerialPortUtils;
-import com.example.ecgtest.comn.SerialReadThread;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -29,7 +28,6 @@ import android_serialport_api.SerialPort;
 
 public class PortDetailActivity extends AppCompatActivity {
 
-    private SerialReadThread serialReadThread;
     private int backPressedTime = 0; //返回键触发次数
     private long mExitTime = System.currentTimeMillis();
 
@@ -96,7 +94,7 @@ public class PortDetailActivity extends AppCompatActivity {
             if (isOpened) {
                 Toast.makeText(this, "成功打开串口", Toast.LENGTH_SHORT).show();
                 initMsgList("成功打开串口");
-                getMessage(serialPort);
+                getMessage();
 
                 //updateViewState(isOpened);
             } else {
@@ -109,9 +107,8 @@ public class PortDetailActivity extends AppCompatActivity {
     /**
      * 收取信息
      *
-     * @param serialPort -获得打开的串口
      */
-    private void getMessage(SerialPort serialPort) {
+    private void getMessage() {
 
         handler = new Handler(){
             // 通过复写handlerMessage()从而确定更新UI的操作
