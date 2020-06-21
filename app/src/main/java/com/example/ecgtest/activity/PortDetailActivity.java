@@ -93,6 +93,7 @@ public class PortDetailActivity extends AppCompatActivity {
             isOpened = serialPort != null;
             if (isOpened) {
                 Toast.makeText(this, "成功打开串口", Toast.LENGTH_SHORT).show();
+                recyclerContents = new ArrayList<>();
                 initMsgList("成功打开串口");
                 getMessage();
 
@@ -114,7 +115,11 @@ public class PortDetailActivity extends AppCompatActivity {
             // 通过复写handlerMessage()从而确定更新UI的操作
             @Override
             public void handleMessage(@NonNull Message msg) {
-                initMsgList(msg.obj.toString());
+                //已屏蔽2047 2047
+                String resStr = msg.obj.toString();
+                if (!"2047 2047 ".equals(resStr)){
+                    initMsgList(resStr);
+                }
             }
         };
 
