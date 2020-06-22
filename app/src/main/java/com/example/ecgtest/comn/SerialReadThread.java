@@ -27,7 +27,6 @@ public class SerialReadThread extends Thread {
     private ArrayList<String> dataPack = new ArrayList<>();
     private static final int PACK_SIZE = 8;
 
-    public static Handler handler = new Handler();
     private BufferedInputStream inputStream;
 
     private byte[] received = new byte[1];
