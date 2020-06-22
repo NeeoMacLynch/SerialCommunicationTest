@@ -1,4 +1,4 @@
-package com.example.ecgtest.util;
+package com.example.serialcommunicationtest.util;
 
 import android.util.Log;
 

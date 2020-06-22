@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ECGtest</string>
+    <string name="app_name">SerialCommunicationTest</string>
     <string name="ecg">ECG测试</string>
     <string name="ecg_message">size：%1$d 数据监听：%2$s</string>
     <string name="open_port">打开串口</string>

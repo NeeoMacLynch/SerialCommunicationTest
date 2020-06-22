@@ -1,4 +1,4 @@
-package com.example.ecgtest;
+package com.example.serialcommunicationtest;
 
 import org.junit.Test;
 

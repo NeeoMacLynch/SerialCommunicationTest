@@ -1,21 +1,17 @@
-package com.example.ecgtest.comn;
+package com.example.serialcommunicationtest.comn;
 
-import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
 import android.util.Log;
 
-import com.example.ecgtest.activity.PortDetailActivity;
-import com.example.ecgtest.util.ByteUtils;
-import com.example.ecgtest.util.DataUtils;
+import com.example.serialcommunicationtest.activity.PortDetailActivity;
+import com.example.serialcommunicationtest.util.ByteUtils;
+import com.example.serialcommunicationtest.util.DataUtils;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * 读串口线程

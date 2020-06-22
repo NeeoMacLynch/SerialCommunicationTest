@@ -1,2 +1,2 @@
 include ':app'
-rootProject.name = "ECGtest"
+rootProject.name = "SerialCommunicationTest"

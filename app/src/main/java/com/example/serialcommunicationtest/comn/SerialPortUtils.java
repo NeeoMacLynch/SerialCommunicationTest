@@ -1,8 +1,8 @@
-package com.example.ecgtest.comn;
+package com.example.serialcommunicationtest.comn;
 
 import android.util.Log;
 
-import com.example.ecgtest.bean.Device;
+import com.example.serialcommunicationtest.bean.Device;
 
 import java.io.File;
 

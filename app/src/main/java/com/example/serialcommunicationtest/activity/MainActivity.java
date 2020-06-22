@@ -1,15 +1,13 @@
-package com.example.ecgtest.activity;
+package com.example.serialcommunicationtest.activity;
 
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.ecgtest.R;
-import com.example.ecgtest.adapter.PortListAdapter;
-import com.example.ecgtest.bean.Device;
+import com.example.serialcommunicationtest.R;
+import com.example.serialcommunicationtest.adapter.PortListAdapter;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 

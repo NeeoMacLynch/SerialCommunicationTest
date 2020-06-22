@@ -1,4 +1,4 @@
-package com.example.ecgtest.activity;
+package com.example.serialcommunicationtest.activity;
 
 import android.content.Intent;
 import android.graphics.Color;
@@ -14,10 +14,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.ecgtest.R;
-import com.example.ecgtest.adapter.MsgListAdapter;
-import com.example.ecgtest.bean.Device;
-import com.example.ecgtest.comn.SerialPortUtils;
+import com.example.serialcommunicationtest.R;
+import com.example.serialcommunicationtest.adapter.MsgListAdapter;
+import com.example.serialcommunicationtest.bean.Device;
+import com.example.serialcommunicationtest.comn.SerialPortUtils;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 

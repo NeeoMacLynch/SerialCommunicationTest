@@ -1,4 +1,4 @@
-package com.example.ecgtest.bean;
+package com.example.serialcommunicationtest.bean;
 
 import androidx.annotation.NonNull;
 

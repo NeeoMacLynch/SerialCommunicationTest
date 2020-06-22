@@ -1,4 +1,4 @@
-package com.example.ecgtest.util;
+package com.example.serialcommunicationtest.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;

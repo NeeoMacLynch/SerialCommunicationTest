@@ -1,7 +1,6 @@
-package com.example.ecgtest.adapter;
+package com.example.serialcommunicationtest.adapter;
 
 import android.content.Context;
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,8 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.ecgtest.R;
-import com.example.ecgtest.activity.PortDetailActivity;
+import com.example.serialcommunicationtest.R;
 
 import java.util.List;
 
