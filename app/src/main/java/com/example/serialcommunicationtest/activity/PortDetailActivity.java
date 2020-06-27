@@ -9,7 +9,6 @@ import android.os.Message;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
-import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -158,7 +157,6 @@ public class PortDetailActivity extends AppCompatActivity {
      * 显示信息
      *
      * @param content -获得的内容
-     * todo 注意修改函数
      */
     private void initMsgList(String content) {
         recyclerContents.add(content);
@@ -166,6 +164,7 @@ public class PortDetailActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this)); //设置布局管理器
         recyclerView.setAdapter(new MsgListAdapter(this,recyclerContents));    //设置Adapter
         recyclerView.smoothScrollToPosition(recyclerContents.size()-1);
+
     }
 
     /**
