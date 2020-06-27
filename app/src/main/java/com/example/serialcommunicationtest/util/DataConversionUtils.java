@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class ByteUtils {
+public class DataConversionUtils {
 
     /**
      * 十六进制字节数组转字符串
@@ -66,6 +66,18 @@ public class ByteUtils {
             builder.append(" ");
         }
 
+        return builder.toString();
+    }
+
+    /**
+     * 16进制转ASCII
+     * */
+    public static String hexStr2Ascii(String hexStr) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < hexStr.length(); i += 2) {
+            String str = hexStr.substring(i, i + 2);
+            builder.append((char) Integer.parseInt(str, 16));
+        }
         return builder.toString();
     }
 

@@ -8,6 +8,6 @@
     <string name="hint">点击卡片查看详情</string>
     <string name="serial_port">串口设备</string>
     <string name="device_path_text">串口地址：%s</string>
-    <string name="bt">波特率：115200</string>
+    <string name="bt">波特率：</string>
     <string name="msg_item_title">命令：</string>
 </resources>

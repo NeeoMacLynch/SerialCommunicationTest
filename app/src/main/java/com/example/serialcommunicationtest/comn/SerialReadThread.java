@@ -5,8 +5,8 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.example.serialcommunicationtest.activity.PortDetailActivity;
-import com.example.serialcommunicationtest.util.ByteUtils;
-import com.example.serialcommunicationtest.util.DataUtils;
+import com.example.serialcommunicationtest.util.DataConversionUtils;
+import com.example.serialcommunicationtest.util.DataProcessingUtils;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -20,8 +20,13 @@ public class SerialReadThread extends Thread {
 
     private static final String TAG = "SerialReadThread";
 
-    private ArrayList<String> dataPack = new ArrayList<>();
-    private static final int PACK_SIZE = 8;
+    private ArrayList<String> ecgDataPack = new ArrayList<>();
+    private static final int ECG_PACK_SIZE = 8;
+
+    private ArrayList<String> boDataPack = new ArrayList<>();
+    private static final int BO_PACK_SIZE = 7;
+
+    private ArrayList<String> theDataPack = new ArrayList<>();
 
     private BufferedInputStream inputStream;
 
@@ -35,10 +40,14 @@ public class SerialReadThread extends Thread {
     @Override
     public void run() {
 
-        Thread dataProcessingThread = new Thread(runnable);
+        Thread ecgThread = new Thread(ecgRunnable);
+        Thread theThread = new Thread(thermometerRunnable);
+        Thread boThread = new Thread(bloodOxygenRunnable);
 
         Log.e(TAG,"开始读线程");
-        dataProcessingThread.start();
+        ecgThread.start();
+        theThread.start();
+        boThread.start();
         while (!Thread.currentThread().isInterrupted()) {
 
             try {
@@ -48,7 +57,9 @@ public class SerialReadThread extends Thread {
                     size = inputStream.read(received);
 
                     if (size > 0) {
-                        dataProcessingThread.run();
+                        ecgThread.run();
+                        theThread.run();
+                        boThread.run();
                     }
                 } else {
                     // 暂停时间，防止循环导致CPU占用率过高
@@ -65,19 +76,57 @@ public class SerialReadThread extends Thread {
     }
 
     /**
-     * 新线程内进行数据解析
+     * ECG数据解析进程
      * */
-    private Runnable runnable = () -> {
-        packData(onDataReceive(received, size));
-        if (dataPack.size() == PACK_SIZE) {
-            if (DataUtils.checkDataPack(dataPack)){
+    private Runnable ecgRunnable = () -> {
+        packEcgData(DataProcessingUtils.onDataReceive(received, size));
+        if (ecgDataPack.size() == ECG_PACK_SIZE) {
+            if (DataProcessingUtils.checkEcgDataPack(ecgDataPack)){
                 //每次发送message必须重新构造message对象
                 Message msg = Message.obtain();
-                msg.obj = DataUtils.unPackData(dataPack);
+                msg.obj = DataProcessingUtils.unPackEcgData(ecgDataPack);
                 //调用PortDetailActivity中的静态handler
                 PortDetailActivity.handler.sendMessage(msg);
             }
-            dataPack.clear();
+            ecgDataPack.clear();
+        }
+    };
+
+    /**
+     * BO数据解析进程
+     * */
+    private Runnable bloodOxygenRunnable = () -> {
+        packBoData(DataProcessingUtils.onDataReceive(received, size));
+        if (boDataPack.size() == BO_PACK_SIZE) {
+            // TODO : 2020/6/27 数据未解析
+            //每次发送message必须重新构造message对象
+            Message msg = Message.obtain();
+            StringBuilder builder = new StringBuilder();
+            for (String strItem : boDataPack){
+                builder.append(strItem);
+                builder.append(" ");
+            }
+            msg.obj = builder.toString();
+            //调用PortDetailActivity中的静态handler
+            PortDetailActivity.handler.sendMessage(msg);
+
+            boDataPack.clear();
+        }
+    };
+
+    /**
+     * 体温枪数据解析进程
+     * */
+    private Runnable thermometerRunnable = () -> {
+        String hexStr = DataProcessingUtils.onDataReceive(received, size);
+        //判断打包是否结束
+        if(packTheData(hexStr)){
+            //每次发送message必须重新构造message对象
+            Message msg = Message.obtain();
+            msg.obj = DataProcessingUtils.unPackTheData(theDataPack);
+            //调用PortDetailActivity中的静态handler
+            PortDetailActivity.handler.sendMessage(msg);
+            theDataPack.clear();
         }
     };
 
@@ -95,32 +144,67 @@ public class SerialReadThread extends Thread {
         }
     }
 
-    /**
-     * 处理获取到的数据
-     *
-     * @param received -被处理数据
-     * @param size -数组长度
-     */
-    private String onDataReceive(byte[] received, int size) {
-
-        String hexStr = ByteUtils.bytes2HexStr(received, 0 , size);
-        String msgStr = "接收数据：" + hexStr;
-
-        Log.d(TAG, msgStr);
-        return hexStr;
-    }
 
     /**
-     * 打包数据包
+     * 打包ecg数据包
+     * 打包是否完成由list.size决定
      *
      * @param hexStr -可能的数据包元素
      * */
-    private void packData(String hexStr) {
-        if (hexStr.equals("05") && dataPack.size() == 0) {
-            dataPack.add(hexStr);
-        } else if (dataPack.size() >= 1 && dataPack.size() <= PACK_SIZE) {
-            dataPack.add(hexStr);
+    private void packEcgData(String hexStr) {
+        if (hexStr.equals("05") && ecgDataPack.isEmpty()) {
+            ecgDataPack.add(hexStr);
+        } else if (ecgDataPack.size() >= 1 && ecgDataPack.size() <= ECG_PACK_SIZE) {
+            ecgDataPack.add(hexStr);
         }
     }
+
+    /**
+     * 打包ecg数据包
+     * 打包是否完成由list.size决定
+     *
+     * @param hexStr -可能的数据包元素
+     * */
+    private void packBoData(String hexStr) {
+        if (hexStr.equals("17") && boDataPack.isEmpty()) {
+            boDataPack.add(hexStr);
+        } else if (boDataPack.size() >= 1 && boDataPack.size() <= BO_PACK_SIZE) {
+            boDataPack.add(hexStr);
+        }
+    }
+
+    /**
+     * 打包the数据包
+     * 打包是否完成由返回的布尔值决定
+     *
+     * @param hexStr -可能的数据包元素
+     * */
+    private Boolean packTheData(String hexStr) {
+
+        theDataPack.add(hexStr);
+
+        if (theDataPack.get(theDataPack.size()-1).equals("0A")) {
+            // 去掉末尾结束符, 和休眠时的值
+            theDataPack.remove("0A");
+            theDataPack.remove("0D");
+            //由于设备会传回多个00，因此需要循环剔除00
+            while (theDataPack.remove("00")) Log.e(TAG, "剔除00");
+
+            // list长度为3, 数据包保存的是错误信息，打包结束
+            if (theDataPack.size() > 3) {
+                // 移除包括引号在内的文字前缀，只保留数据
+                while (!theDataPack.get(0).equals("3A")) {
+                    theDataPack.remove(0);
+                    if (theDataPack.isEmpty()) break;
+                }
+                theDataPack.remove("3A");
+            }
+            //list为空则说明数据包不符合解析规则
+            return !theDataPack.isEmpty();
+        }
+
+        return false;
+    }
+
 
 }

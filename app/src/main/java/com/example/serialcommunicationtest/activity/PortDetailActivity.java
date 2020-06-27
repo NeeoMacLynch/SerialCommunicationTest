@@ -1,11 +1,15 @@
 package com.example.serialcommunicationtest.activity;
 
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -48,26 +52,22 @@ public class PortDetailActivity extends AppCompatActivity {
         devicePath = intent.getStringExtra("devicePath");
 
         initView();
-        initDevice();
         FloatingActionButton buttonStar = findViewById(R.id.bt_port_switch);
         buttonStar.setOnClickListener(v -> switchSerialPort());
 
     }
 
     /**
-     * 初始化设备
-     */
-    private void initDevice() {
-
-        //设定波特率为115200
-        String baudrate = "115200";
-        device = new Device(devicePath, baudrate);
-    }
-
-    /**
      * 界面初始化
      * */
     private void initView() {
+
+        Resources res =getResources();
+        Spinner spinner = findViewById(R.id.sp_bt);
+        ArrayAdapter<String> adapter= new ArrayAdapter<>(this, R.layout.spinner_item, res.getStringArray(R.array.baudrates_value));
+        adapter.setDropDownViewResource(R.layout.spinner_item);
+        spinner.setAdapter(adapter);
+
         TextView textView = findViewById(R.id.tv_port);
         String devicePathText = getResources().getString(R.string.device_path_text);
         String portStr = String.format(devicePathText, devicePath);
@@ -79,6 +79,8 @@ public class PortDetailActivity extends AppCompatActivity {
      * 打开&关闭串口
      */
     private void switchSerialPort() {
+
+        initDevice();
 
         if (isOpened){
             SerialPortUtils.instance().close();
@@ -103,6 +105,18 @@ public class PortDetailActivity extends AppCompatActivity {
                 Toast.makeText(this, "打开串口失败", Toast.LENGTH_LONG).show();
             }
         }
+    }
+
+
+    /**
+     * 初始化设备
+     */
+    private void initDevice() {
+
+        Spinner spinner = findViewById(R.id.sp_bt);
+        String baudrate = spinner.getSelectedItem().toString();
+
+        device = new Device(devicePath, baudrate);
     }
 
     /**
