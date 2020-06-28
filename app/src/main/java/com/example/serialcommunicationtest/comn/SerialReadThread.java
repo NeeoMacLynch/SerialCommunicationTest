@@ -5,7 +5,6 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.example.serialcommunicationtest.activity.PortDetailActivity;
-import com.example.serialcommunicationtest.util.DataConversionUtils;
 import com.example.serialcommunicationtest.util.DataProcessingUtils;
 
 import java.io.BufferedInputStream;
@@ -79,7 +78,8 @@ public class SerialReadThread extends Thread {
      * ECG数据解析进程
      * */
     private Runnable ecgRunnable = () -> {
-        packEcgData(DataProcessingUtils.onDataReceive(received, size));
+        String flag = "EcgRunnable";
+        packEcgData(DataProcessingUtils.onDataReceive(received, size, flag));
         if (ecgDataPack.size() == ECG_PACK_SIZE) {
             if (DataProcessingUtils.checkEcgDataPack(ecgDataPack)){
                 //每次发送message必须重新构造message对象
@@ -96,7 +96,8 @@ public class SerialReadThread extends Thread {
      * BO数据解析进程
      * */
     private Runnable bloodOxygenRunnable = () -> {
-        packBoData(DataProcessingUtils.onDataReceive(received, size));
+        String flag = "BloodOxygenRunnable";
+        packBoData(DataProcessingUtils.onDataReceive(received, size, flag));
         if (boDataPack.size() == BO_PACK_SIZE) {
             // TODO : 2020/6/27 数据未解析
             //每次发送message必须重新构造message对象
@@ -118,7 +119,8 @@ public class SerialReadThread extends Thread {
      * 体温枪数据解析进程
      * */
     private Runnable thermometerRunnable = () -> {
-        String hexStr = DataProcessingUtils.onDataReceive(received, size);
+        String flag = "ThermometerRunnable";
+        String hexStr = DataProcessingUtils.onDataReceive(received, size, flag);
         //判断打包是否结束
         if(packTheData(hexStr)){
             //每次发送message必须重新构造message对象

@@ -130,7 +130,7 @@ public class PortDetailActivity extends AppCompatActivity {
             public void handleMessage(@NonNull Message msg) {
                 //已屏蔽2047 2047
                 String resStr = msg.obj.toString();
-                if (!"2047 2047 ".equals(resStr)){
+                if (!"2047 2047 ".equals(resStr) && !"17 8E 8F FF 9C 9C EB ".equals(resStr)){
                     initMsgList(resStr);
                 }
             }

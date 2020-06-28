@@ -34,9 +34,34 @@ public class DataProcessingUtils {
      * */
     public static String unPackEcgData(ArrayList<String> ecgDataPack) {
         ArrayList<Integer> ECGs = new ArrayList<>();
-        //拼接[2,3] [4,5]并去掉第一位数（ECG数据不包含高位第一位子节）
-        int ECG1 = Integer.parseInt((ecgDataPack.get(2) + ecgDataPack.get(3)).substring(1, 4), 16);
-        int ECG2 = Integer.parseInt((ecgDataPack.get(4) + ecgDataPack.get(5)).substring(1, 4), 16);
+        //获得数据头并处理
+        int head = Integer.parseInt(ecgDataPack.get(1), 16) & 0x7F;
+        //处理后的数据头转二进制
+        byte[] highData = DataConversionUtils.dec2BinArray(head);
+
+        int position1 = highData.length - 1;
+        int position2 = 2;
+        for ( ; position1 >= 0 && position2 < highData.length+2; position1--, position2++) {
+            //还原真值
+            int dec = Integer.parseInt(ecgDataPack.get(position2), 16);
+            int realDec;
+            if (highData[position1] == 0) {
+                realDec = dec & 0x7F;
+            } else {
+                realDec = dec | 0x80;
+            }
+            String realHexStr = Integer.toHexString(realDec);
+            ecgDataPack.set(position2, realHexStr);
+
+            /*String hexStr = ecgDataPack.get(position2);
+            byte headData = highData[position1];
+            String realHexStr = recoverRealData(hexStr, headData);
+            ecgDataPack.set(position2, realHexStr);*/
+        }
+
+        //拼接[2,3] [4,5]
+        int ECG1 = Integer.parseInt((ecgDataPack.get(2) + ecgDataPack.get(3)), 16);
+        int ECG2 = Integer.parseInt((ecgDataPack.get(4) + ecgDataPack.get(5)), 16);
         ECGs.add(ECG1);
         ECGs.add(ECG2);
 
@@ -50,7 +75,21 @@ public class DataProcessingUtils {
     }
 
     /**
-     * 解析ecg数据包
+     * 恢复真值
+     *
+     * @param hexStr -需要回复的hex
+     * @param head -高位数据
+     * @return 真值
+     * */
+    /*private static String recoverRealData (String hexStr, byte head) {
+        String binStr = String.
+        byte[] data = DataConversionUtils.hex2BinArray(hexStr);
+        data[0] = head;
+        return DataConversionUtils.bin2HexStr(data);
+    }*/
+
+    /**
+     * 解析the数据包
      *
      * @param theDataPack -体温结果字符数组
      * @return 解析结果为体温数字字符串或错误信息
@@ -81,13 +120,12 @@ public class DataProcessingUtils {
      * @param received -被处理数据
      * @param size -数组长度
      */
-    public static String onDataReceive(byte[] received, int size) {
+    public static String onDataReceive(byte[] received, int size, String flag) {
 
         String hexStr = DataConversionUtils.bytes2HexStr(received, 0 , size);
-        String msgStr = "接收数据：" + hexStr;
+        String msgStr = flag + "接收数据：" + hexStr;
 
         Log.d(TAG, msgStr);
-
         return hexStr;
 
     }

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class DataConversionUtils {
+    private static String baseHex =  "0123456789ABCDEF";
 
     /**
      * 十六进制字节数组转字符串
@@ -39,6 +40,56 @@ public class DataConversionUtils {
         }
         //toUpperCase()字符串转换为大写
         return builder.toString().toUpperCase();
+    }
+
+
+    /**
+     * Hex字符串转byte
+     * @param inHex 待转换的Hex字符串
+     * @return  转换后的byte
+     */
+    public static byte hex2Byte(String inHex){
+        return (byte)Integer.parseInt(inHex,16);
+    }
+
+    /**
+     * hex字符串转byte数组
+     * @param hexStr 待转换的Hex字符串
+     * @return  转换后的byte数组结果
+     */
+    public static byte[] hex2BinArray(String hexStr){
+        //hexString的长度对2取整，作为bytes的长度
+        int len = hexStr.length()/2;
+        byte[] bytes = new byte[len];
+        byte high = 0;//字节高四位
+        byte low = 0;//字节低四位
+        for(int i=0;i<len;i++){
+            //右移四位得到高位
+            high = (byte)((baseHex.indexOf(hexStr.charAt(2*i)))<<4);
+            low = (byte) baseHex.indexOf(hexStr.charAt(2*i+1));
+            bytes[i] = (byte) (high|low);//高地位做或运算
+        }
+        return bytes;
+    }
+
+    /**
+     *  将二进制数组转换为十六进制字符串
+     *
+     * @param bytes -目标数组
+     * @return hex字符串结果
+     */
+    public static String bin2HexStr(byte[] bytes){
+
+        StringBuilder result = new StringBuilder();
+        String hex;
+        for (byte aByte : bytes) {
+            //字节高4位
+            hex = String.valueOf(baseHex.charAt((aByte & 0xF0) >> 4));
+            //字节低4位
+            hex += String.valueOf(baseHex.charAt(aByte & 0x0F));
+            result.append(hex);
+        }
+        return result.toString();
     }
 
     /**
@@ -80,5 +131,19 @@ public class DataConversionUtils {
         }
         return builder.toString();
     }
+
+    /**
+     * 十进制转二进制byte数组
+     * 只保留四位
+     * */
+    public static byte[] dec2BinArray(int a) {
+        return new byte[] {
+                (byte) ((a >> 3) & 0x01),
+                (byte) ((a >> 2) & 0x01),
+                (byte) ((a >> 1) & 0x01),
+                (byte) (a & 0x01)
+        };
+    }
+
 
 }
