@@ -51,12 +51,9 @@ public class DataProcessingUtils {
                 realDec = dec | 0x80;
             }
             String realHexStr = Integer.toHexString(realDec);
+            //个位数时补0
+            if (realHexStr.length() == 1) realHexStr = "0" + realHexStr;
             ecgDataPack.set(position2, realHexStr);
-
-            /*String hexStr = ecgDataPack.get(position2);
-            byte headData = highData[position1];
-            String realHexStr = recoverRealData(hexStr, headData);
-            ecgDataPack.set(position2, realHexStr);*/
         }
 
         //拼接[2,3] [4,5]
@@ -73,20 +70,6 @@ public class DataProcessingUtils {
         }
         return ECGsBuilder.toString();
     }
-
-    /**
-     * 恢复真值
-     *
-     * @param hexStr -需要回复的hex
-     * @param head -高位数据
-     * @return 真值
-     * */
-    /*private static String recoverRealData (String hexStr, byte head) {
-        String binStr = String.
-        byte[] data = DataConversionUtils.hex2BinArray(hexStr);
-        data[0] = head;
-        return DataConversionUtils.bin2HexStr(data);
-    }*/
 
     /**
      * 解析the数据包
