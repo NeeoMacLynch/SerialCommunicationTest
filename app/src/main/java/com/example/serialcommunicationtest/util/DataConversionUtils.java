@@ -13,7 +13,7 @@ public class DataConversionUtils {
      * @param bytes -目标数组
      * @param dec -起始位置
      * @param length -长度
-     * @return
+     * @return 十六进制字符串
      */
     public static String bytes2HexStr(byte[] bytes, int dec, int length) {
         byte[] temp = new byte[length];
