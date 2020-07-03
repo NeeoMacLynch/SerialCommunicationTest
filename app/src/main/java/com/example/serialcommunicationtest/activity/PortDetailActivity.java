@@ -20,7 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.serialcommunicationtest.R;
 import com.example.serialcommunicationtest.adapter.MsgListAdapter;
 import com.example.serialcommunicationtest.bean.Device;
-import com.example.serialcommunicationtest.comn.SerialPortUtils;
+import com.example.serialcommunicationtest.comn.SerialPortManager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -63,7 +63,11 @@ public class PortDetailActivity extends AppCompatActivity {
 
         Resources res =getResources();
         Spinner spinner = findViewById(R.id.sp_bt);
-        ArrayAdapter<String> adapter= new ArrayAdapter<>(this, R.layout.spinner_item, res.getStringArray(R.array.baudrates_value));
+        ArrayAdapter<String> adapter= new ArrayAdapter<>(
+                this,
+                R.layout.spinner_item,
+                res.getStringArray(R.array.baudrates_value)
+        );
         adapter.setDropDownViewResource(R.layout.spinner_item);
         spinner.setAdapter(adapter);
 
@@ -82,14 +86,14 @@ public class PortDetailActivity extends AppCompatActivity {
         initDevice();
 
         if (isOpened){
-            SerialPortUtils.instance().close();
+            SerialPortManager.instance().close();
             isOpened = false;
             initMsgList("串口已关闭");
             Toast.makeText(this, "串口已关闭", Toast.LENGTH_LONG).show();
             //updateViewState(isOpened);
         } else {
 
-            SerialPort serialPort = SerialPortUtils.instance().open(device);
+            SerialPort serialPort = SerialPortManager.instance().open(device);
             //isOpened的值是{serialPort != null}的判断结果
             isOpened = serialPort != null;
             if (isOpened) {
@@ -100,7 +104,7 @@ public class PortDetailActivity extends AppCompatActivity {
 
                 //updateViewState(isOpened);
             } else {
-                SerialPortUtils.instance().close();
+                SerialPortManager.instance().close();
                 Toast.makeText(this, "打开串口失败", Toast.LENGTH_LONG).show();
             }
         }
@@ -204,7 +208,7 @@ public class PortDetailActivity extends AppCompatActivity {
                 backPressedTime++;
             } else {
                 //第二次点击
-                SerialPortUtils.instance().close();
+                SerialPortManager.instance().close();
                 isOpened = false;
 
                 backPressedTime = 0;

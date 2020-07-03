@@ -5,6 +5,7 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.example.serialcommunicationtest.activity.PortDetailActivity;
+import com.example.serialcommunicationtest.bean.BloodOxygenData;
 import com.example.serialcommunicationtest.util.DataProcessingUtils;
 
 import java.io.BufferedInputStream;
@@ -36,44 +37,6 @@ public class SerialReadThread extends Thread {
         inputStream = new BufferedInputStream(is);
     }
 
-    @Override
-    public void run() {
-
-        Thread ecgThread = new Thread(ecgRunnable);
-        Thread theThread = new Thread(thermometerRunnable);
-        Thread boThread = new Thread(bloodOxygenRunnable);
-
-        Log.e(TAG,"开始读线程");
-        ecgThread.start();
-        theThread.start();
-        boThread.start();
-        while (!Thread.currentThread().isInterrupted()) {
-
-            try {
-                int available = inputStream.available();
-
-                if (available > 0) {
-                    size = inputStream.read(received);
-
-                    if (size > 0) {
-                        ecgThread.run();
-                        theThread.run();
-                        boThread.run();
-                    }
-                } else {
-                    // 暂停时间，防止循环导致CPU占用率过高
-                    SystemClock.sleep(1);
-                }
-
-            } catch (IOException e) {
-                Log.e(TAG,"读取数据失败", e);
-            }
-
-        }
-
-        Log.d(TAG,"结束读进程");
-    }
-
     /**
      * ECG数据解析进程
      * */
@@ -81,7 +44,7 @@ public class SerialReadThread extends Thread {
         String flag = "EcgRunnable";
         packEcgData(DataProcessingUtils.onDataReceive(received, size, flag));
         if (ecgDataPack.size() == ECG_PACK_SIZE) {
-            if (DataProcessingUtils.checkEcgDataPack(ecgDataPack)){
+            if (DataProcessingUtils.checkDataPack(ecgDataPack)){
                 //每次发送message必须重新构造message对象
                 Message msg = Message.obtain();
                 msg.obj = DataProcessingUtils.unPackEcgData(ecgDataPack);
@@ -99,18 +62,17 @@ public class SerialReadThread extends Thread {
         String flag = "BloodOxygenRunnable";
         packBoData(DataProcessingUtils.onDataReceive(received, size, flag));
         if (boDataPack.size() == BO_PACK_SIZE) {
-            // TODO : 2020/6/27 数据未解析
-            //每次发送message必须重新构造message对象
+            BloodOxygenData bloodOxygenData;
+            bloodOxygenData = DataProcessingUtils.unPackBoData(boDataPack);
+            //可以对bo对象的属性判断并打印错误或正确信息
+            /*if (0 != bloodOxygenData.getPulseRate() && 0!= bloodOxygenData.getBloodOxygen()) {
+                Message msg = Message.obtain();
+                msg.obj = "脉率：" + bloodOxygenData.getPulseRate() + "，血氧：" + bloodOxygenData.getBloodOxygen();
+                PortDetailActivity.handler.sendMessage(msg);
+            }*/
             Message msg = Message.obtain();
-            StringBuilder builder = new StringBuilder();
-            for (String strItem : boDataPack){
-                builder.append(strItem);
-                builder.append(" ");
-            }
-            msg.obj = builder.toString();
-            //调用PortDetailActivity中的静态handler
+            msg.obj = "脉率：" + bloodOxygenData.getPulseRate() + "，血氧：" + bloodOxygenData.getBloodOxygen();
             PortDetailActivity.handler.sendMessage(msg);
-
             boDataPack.clear();
         }
     };
@@ -131,6 +93,47 @@ public class SerialReadThread extends Thread {
             theDataPack.clear();
         }
     };
+
+    Thread ecgThread = new Thread(ecgRunnable);
+    Thread theThread = new Thread(thermometerRunnable);
+    Thread boThread = new Thread(bloodOxygenRunnable);
+
+    @Override
+    public void run() {
+
+        Log.e(TAG,"开始读线程");
+//        ecgThread.start();
+//        theThread.start();
+//        boThread.start();
+        while (!Thread.currentThread().isInterrupted()) {
+
+            try {
+                int available = inputStream.available();
+
+                if (available > 0) {
+                    size = inputStream.read(received);
+
+                    if (size > 0) {
+
+//                        ecgThread.run();
+//                        theThread.run();
+                        boThread.run();
+                    }
+                } else {
+                    // 暂停时间，防止循环导致CPU占用率过高
+                    SystemClock.sleep(1);
+                }
+
+            } catch (IOException e) {
+                Log.e(TAG,"读取数据失败", e);
+            }
+
+        }
+
+        Log.d(TAG,"结束读进程");
+    }
+
+
 
     /**
      * 停止读线程
@@ -162,7 +165,7 @@ public class SerialReadThread extends Thread {
     }
 
     /**
-     * 打包ecg数据包
+     * 打包bo数据包
      * 打包是否完成由list.size决定
      *
      * @param hexStr -可能的数据包元素
