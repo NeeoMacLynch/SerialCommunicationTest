@@ -10,4 +10,5 @@
     <string name="device_path_text">串口地址：%s</string>
     <string name="bt">波特率：</string>
     <string name="msg_item_title">命令：</string>
+    <string name="start_bp">启动血压设备</string>
 </resources>

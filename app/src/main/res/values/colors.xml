@@ -20,4 +20,7 @@
     <color name="red_800">#c62828</color>
     <color name="blue_800">#1565C0</color>
     <color name="cyan_700">#0097A7</color>
+
+    <color name="app_default">#55C18F</color>
+    <color name="green_light">#3FB47C</color>
 </resources>
