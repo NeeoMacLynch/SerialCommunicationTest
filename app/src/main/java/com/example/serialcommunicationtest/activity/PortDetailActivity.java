@@ -6,8 +6,10 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,13 +21,18 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.serialcommunicationtest.R;
 import com.example.serialcommunicationtest.adapter.MsgListAdapter;
+import com.example.serialcommunicationtest.bean.Command;
 import com.example.serialcommunicationtest.bean.Device;
 import com.example.serialcommunicationtest.comn.SerialPortManager;
+import com.example.serialcommunicationtest.util.DataConversionUtils;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import android_serialport_api.SerialPort;
 
@@ -42,6 +49,23 @@ public class PortDetailActivity extends AppCompatActivity {
     private Device device;
     private List<String> recyclerContents = new ArrayList<>();
 
+    //按钮监听器
+    class ButtonClickListener implements View.OnClickListener {
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()) {
+                case R.id.port_switch:
+                    switchSerialPort();
+                    break;
+                case R.id.start_bp_switch:
+                    startBloodPressureDevice();
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,8 +75,11 @@ public class PortDetailActivity extends AppCompatActivity {
         devicePath = intent.getStringExtra("devicePath");
 
         initView();
-        FloatingActionButton buttonStar = findViewById(R.id.bt_port_switch);
-        buttonStar.setOnClickListener(v -> switchSerialPort());
+        FloatingActionButton port_switch = findViewById(R.id.port_switch);
+        Button start_bp_switch = findViewById(R.id.start_bp_switch);
+
+        port_switch.setOnClickListener(new ButtonClickListener());
+        start_bp_switch.setOnClickListener(new ButtonClickListener());
 
     }
 
@@ -110,6 +137,67 @@ public class PortDetailActivity extends AppCompatActivity {
         }
     }
 
+    private static final String[] CMD_NBP_PERIOD_MODE_LIST = {
+            "00",   //设置为手动方式
+            "01",   //设置自动测量周期为1分钟
+            "02",   //设置自动测量周期为2分钟
+            "03",   //设置自动测量周期为3分钟
+            "04",   //设置自动测量周期为4分钟
+            "05",   //设置自动测量周期为5分钟
+            "06",   //设置自动测量周期为10分钟
+            "07",   //设置自动测量周期为15分钟
+            "08",   //设置自动测量周期为30分钟
+            "09",   //设置自动测量周期为60分钟
+            "0A",   //设置自动测量周期为90分钟
+            "0B",   //设置自动测量周期为120分钟
+            "0C",   //设置自动测量周期为180分钟
+            "0D",   //设置自动测量周期为240分钟
+            "0E"    //设置自动测量周期为480分钟
+    };
+
+    private static final Map<String, Command> CMD_NBP = new HashMap<String, Command>(){{
+        put("CMD_NBP_START", new Command("55")); //启动命令包
+        put("CMD_NBP_END", new Command("56")); //中止测量命令包
+        put("CMD_NBP_PERIOD", new Command("57", CMD_NBP_PERIOD_MODE_LIST)); //测量周期设置命令包
+        put("CMD_NBP_CAL", new Command("58")); //测量校准命令包
+        put("CMD_NBP_RESET", new Command("59")); //测量复位命令包
+        put("CMD_NBP_PNEUMATIC", new Command("5A")); //漏气检测命令包
+        put("CMD_NBP_STATE", new Command("5B")); //状态查询命令包
+        put("CMD_NBP_GET_RESULT", new Command("5E")); //查询结果命令包
+    }};
+
+
+    private void startBloodPressureDevice() {
+        if (isOpened) {
+            new Thread(() -> {
+
+                //发送0x59
+                SerialPortManager.instance().sendCommand(Objects.requireNonNull(CMD_NBP.get("CMD_NBP_RESET")).getCommand());
+
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                //发送0x57 0x01
+                SerialPortManager.instance().sendCommand(
+                        Objects.requireNonNull(CMD_NBP.get("CMD_NBP_PERIOD")).getCommand()
+                                + " " +
+                                Objects.requireNonNull(CMD_NBP.get("CMD_NBP_PERIOD")).getMode(1)
+                );
+
+                //发送0x55
+                SerialPortManager.instance().sendCommand(Objects.requireNonNull(CMD_NBP.get("CMD_NBP_START")).getCommand());
+
+                //TODO: 2020/7/3 测试是否漏气
+
+            }).start();
+        } else {
+            Toast.makeText(this, "串口未打开", Toast.LENGTH_SHORT).show();
+        }
+
+
+    }
 
     /**
      * 初始化设备
@@ -124,7 +212,6 @@ public class PortDetailActivity extends AppCompatActivity {
 
     /**
      * 收取信息
-     *
      */
     private void getMessage() {
 
@@ -132,9 +219,9 @@ public class PortDetailActivity extends AppCompatActivity {
             // 通过复写handlerMessage()从而确定更新UI的操作
             @Override
             public void handleMessage(@NonNull Message msg) {
-                //已屏蔽2047 2047
+                //已屏蔽重复初始值
                 String resStr = msg.obj.toString();
-                if (!"2047 2047 ".equals(resStr) && !"17 8E 8F FF 9C 9C EB ".equals(resStr)){
+                if (!"2047 2047 ".equals(resStr) && !"脉率：0，血氧：0".equals(resStr)){
                     initMsgList(resStr);
                 }
             }
@@ -178,7 +265,7 @@ public class PortDetailActivity extends AppCompatActivity {
      */
     private void updateViewState(boolean isSerialPortOpened) {
 
-        FloatingActionButton button = findViewById(R.id.bt_port_switch);
+        FloatingActionButton button = findViewById(R.id.port_switch);
         //TODO:状态改变动画
         button.setVisibility(isSerialPortOpened ? View.INVISIBLE : View.VISIBLE);
 

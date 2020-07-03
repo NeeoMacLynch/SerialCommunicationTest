@@ -65,16 +65,17 @@ public class SerialReadThread extends Thread {
             BloodOxygenData bloodOxygenData;
             bloodOxygenData = DataProcessingUtils.unPackBoData(boDataPack);
             //可以对bo对象的属性判断并打印错误或正确信息
-            /*if (0 != bloodOxygenData.getPulseRate() && 0!= bloodOxygenData.getBloodOxygen()) {
-                Message msg = Message.obtain();
-                msg.obj = "脉率：" + bloodOxygenData.getPulseRate() + "，血氧：" + bloodOxygenData.getBloodOxygen();
-                PortDetailActivity.handler.sendMessage(msg);
-            }*/
             Message msg = Message.obtain();
             msg.obj = "脉率：" + bloodOxygenData.getPulseRate() + "，血氧：" + bloodOxygenData.getBloodOxygen();
             PortDetailActivity.handler.sendMessage(msg);
-            boDataPack.clear();
         }
+    };
+
+    /**
+     * BP数据解析进程
+     * */
+    private Runnable bloodPressureRunnable = () -> {
+
     };
 
     /**
@@ -97,6 +98,7 @@ public class SerialReadThread extends Thread {
     Thread ecgThread = new Thread(ecgRunnable);
     Thread theThread = new Thread(thermometerRunnable);
     Thread boThread = new Thread(bloodOxygenRunnable);
+    Thread bpThread = new Thread(bloodPressureRunnable);
 
     @Override
     public void run() {
@@ -114,10 +116,10 @@ public class SerialReadThread extends Thread {
                     size = inputStream.read(received);
 
                     if (size > 0) {
-
+                        bpThread.run();
 //                        ecgThread.run();
 //                        theThread.run();
-                        boThread.run();
+//                        boThread.run();
                     }
                 } else {
                     // 暂停时间，防止循环导致CPU占用率过高

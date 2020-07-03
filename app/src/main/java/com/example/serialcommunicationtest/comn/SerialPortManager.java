@@ -5,6 +5,7 @@ import android.os.HandlerThread;
 import android.util.Log;
 
 import com.example.serialcommunicationtest.bean.Device;
+import com.example.serialcommunicationtest.util.DataConversionUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -105,6 +106,19 @@ public class SerialPortManager {
      */
     public void sendData(byte[] data) throws Exception {
         outputStream.write(data);
+    }
+
+    /**
+     * 发送命令
+     *
+     * @param command -被发送的命令
+     * */
+    public void sendCommand(String command) {
+        try {
+            SerialPortManager.instance().sendData(DataConversionUtils.hexStr2bytes(command));
+        } catch (Exception e) {
+            Log.e("发送：" + command + " 失败", e.toString());
+        }
     }
 
 }
