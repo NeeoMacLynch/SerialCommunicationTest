@@ -1,30 +1,36 @@
 package com.example.serialcommunicationtest.comn;
 
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.util.Log;
 
 import com.example.serialcommunicationtest.bean.Device;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 
 import android_serialport_api.SerialPort;
 
-public class SerialPortUtils {
+public class SerialPortManager {
     private static final String TAG = "SerialPortUtils";
 
     private SerialReadThread serialReadThread;
+    private OutputStream outputStream;
+    //private HandlerThread writeThread;
 
     private static class InstanceHolder {
 
-        public static SerialPortUtils serialPortUtils = new SerialPortUtils();
+        public static SerialPortManager serialPortManager = new SerialPortManager();
     }
 
-    public static SerialPortUtils instance() {
-        return InstanceHolder.serialPortUtils;
+    public static SerialPortManager instance() {
+        return InstanceHolder.serialPortManager;
     }
 
     private SerialPort serialPort;
 
-    private SerialPortUtils() {
+    private SerialPortManager() {
     }
 
     /**
@@ -57,6 +63,11 @@ public class SerialPortUtils {
             serialReadThread = new SerialReadThread(serialPort.getInputStream());
             serialReadThread.start();
 
+            outputStream = serialPort.getOutputStream();
+
+            /*writeThread = new HandlerThread("WRITE_THREAD");
+            writeThread.start();*/
+
             return serialPort;
         } catch (Throwable tr) {
             Log.e(TAG, "打开串口失败", tr);
@@ -73,11 +84,27 @@ public class SerialPortUtils {
             serialReadThread.close();
         }
 
+        if (outputStream != null) {
+            try {
+                outputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
         if (serialPort != null) {
             serialPort.close();
             serialPort = null;
         }
     }
 
+    /**
+     * 发送数据
+     *
+     * @param data -被发送数据
+     */
+    public void sendData(byte[] data) throws Exception {
+        outputStream.write(data);
+    }
 
 }
