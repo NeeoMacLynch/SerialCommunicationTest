@@ -1,6 +1,7 @@
 package com.example.serialcommunicationtest.util;
 
 import android.util.Log;
+import android.widget.Switch;
 
 import com.example.serialcommunicationtest.bean.BloodOxygenData;
 
@@ -11,7 +12,7 @@ public class DataProcessingUtils {
     private static final String TAG = "DataUtils";
 
     /**
-     * 校验ecg、bo数据包
+     * 校验ecg、bo、bp数据包
      *
      * @param hexList -Hex数组，长度为8
      * @return 校验结果
@@ -26,6 +27,26 @@ public class DataProcessingUtils {
         checkSum -= lastElem;
         //返回校验结果
         return (checkSum & 0x7F) == (lastElem & 0x7F);
+    }
+
+    /**
+     * 转换数据包内数据为真值
+     *
+     * @param dataPack -被处理数据包
+     * */
+    private static void getRealData(ArrayList<String> dataPack) {
+        //获得数据头并处理
+        int head = Integer.parseInt(dataPack.get(1), 16) & 0x7F;
+
+        //减3减去的是包头、数据头、校验位
+        for (int position = 1; position <= dataPack.size() - 3; position++) {
+            int high = (head & (0x01 << position - 1)) << (8 - position);
+            int item = Integer.parseInt(dataPack.get(position+1), 16) & 0x7F;
+            String realItem = Integer.toHexString(item | high);
+            if (realItem.length() == 1) realItem = "0" + realItem;
+            dataPack.set(position+1, realItem);
+        }
+
     }
 
     /**
@@ -57,10 +78,11 @@ public class DataProcessingUtils {
     /**
      * 解析bo数据包
      *
-     *
+     * @param boDataPack -目标数据包
      * */
     public static BloodOxygenData unPackBoData(ArrayList<String> boDataPack) {
         BloodOxygenData bloodOxygenData;
+        // TODO：2020/7/3 负数数据也要解析，可能需要在真值转换中加入负数部分的判断处理
 
         //数据头不为0x80，数据无效
         if (!"80".equals(boDataPack.get(1))) {
@@ -88,43 +110,21 @@ public class DataProcessingUtils {
         return bloodOxygenData;
     }
 
-    /**
-     * 转换数据包内数据为真值
-     *
-     * @param dataPack -被处理数据包
-     * */
-    private static void getRealData(ArrayList<String> dataPack) {
-        //获得数据头并处理
-        int head = Integer.parseInt(dataPack.get(1), 16) & 0x7F;
-        //处理后的数据头转二进制
-        /*byte[] highData = DataConversionUtils.dec2BinArray(head);
+    public static String unPackBpData(ArrayList<String> bpDataPack) {
+        String messageStr;
+        getRealData(bpDataPack);
 
-        int position1 = highData.length - 1;
-        int position2 = 2;
-        for ( ; position1 >= 0 && position2 < highData.length+2; position1--, position2++) {
-            //还原真值
-            int dec = Integer.parseInt(dataPack.get(position2), 16);
-            int realDec;
-            if (highData[position1] == 0) {
-                realDec = dec & 0x7F;
-            } else {
-                realDec = dec | 0x80;
+        switch(bpDataPack.get(0)) {
+            case "04": {
+                
             }
-            String realHexStr = Integer.toHexString(realDec);
-            //个位数时补0
-            if (realHexStr.length() == 1) realHexStr = "0" + realHexStr;
-            dataPack.set(position2, realHexStr);
-        }*/
+            case "24": {
 
-        //减3减去的是包头、数据头、校验位
-        for (int position = 1; position <= dataPack.size() - 3; position++) {
-            int high = (head & (0x01 << position - 1)) << (8 - position);
-            int item = Integer.parseInt(dataPack.get(position+1), 16) & 0x7F;
-            String realItem = Integer.toHexString(item | high);
-            if (realItem.length() == 1) realItem = "0" + realItem;
-            dataPack.set(position+1, realItem);
+            }
+            default: messageStr = "打包错误";
         }
 
+        return messageStr;
     }
 
     /**

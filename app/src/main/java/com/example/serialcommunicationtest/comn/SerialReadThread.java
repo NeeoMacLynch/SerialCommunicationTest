@@ -26,6 +26,11 @@ public class SerialReadThread extends Thread {
     private ArrayList<String> boDataPack = new ArrayList<>();
     private static final int BO_PACK_SIZE = 7;
 
+    private ArrayList<String> bpAckDataPack = new ArrayList<>();
+    private static final int BP_ACK_PACK_SIZE = 5;
+    private ArrayList<String> bpStsDataPack = new ArrayList<>();
+    private static final int BP_STS_PACK_SIZE = 8;
+
     private ArrayList<String> theDataPack = new ArrayList<>();
 
     private BufferedInputStream inputStream;
@@ -62,12 +67,15 @@ public class SerialReadThread extends Thread {
         String flag = "BloodOxygenRunnable";
         packBoData(DataProcessingUtils.onDataReceive(received, size, flag));
         if (boDataPack.size() == BO_PACK_SIZE) {
-            BloodOxygenData bloodOxygenData;
-            bloodOxygenData = DataProcessingUtils.unPackBoData(boDataPack);
-            //可以对bo对象的属性判断并打印错误或正确信息
-            Message msg = Message.obtain();
-            msg.obj = "脉率：" + bloodOxygenData.getPulseRate() + "，血氧：" + bloodOxygenData.getBloodOxygen();
-            PortDetailActivity.handler.sendMessage(msg);
+            if (DataProcessingUtils.checkDataPack(boDataPack)) {
+                BloodOxygenData bloodOxygenData;
+                bloodOxygenData = DataProcessingUtils.unPackBoData(boDataPack);
+                //可以对bo对象的属性判断并打印错误或正确信息
+                Message msg = Message.obtain();
+                msg.obj = "脉率：" + bloodOxygenData.getPulseRate() + "，血氧：" + bloodOxygenData.getBloodOxygen();
+                PortDetailActivity.handler.sendMessage(msg);
+            }
+            boDataPack.clear();
         }
     };
 
@@ -75,6 +83,20 @@ public class SerialReadThread extends Thread {
      * BP数据解析进程
      * */
     private Runnable bloodPressureRunnable = () -> {
+        String flag = "BloodPressureRunnable";
+        packBpData(DataProcessingUtils.onDataReceive(received, size, flag));
+        //应答包解析
+        if (bpAckDataPack.size() == BP_ACK_PACK_SIZE) {
+            if (DataProcessingUtils.checkDataPack(bpAckDataPack)) {
+                String ackMessage;
+                ackMessage = DataProcessingUtils.unPackBpData(bpAckDataPack);
+                Message msg = Message.obtain();
+                msg.obj = "设备应答：" + ackMessage;
+                PortDetailActivity.handler.sendMessage(msg);
+            }
+            bpAckDataPack.clear();
+        }
+
 
     };
 
@@ -177,6 +199,28 @@ public class SerialReadThread extends Thread {
             boDataPack.add(hexStr);
         } else if (boDataPack.size() >= 1 && boDataPack.size() <= BO_PACK_SIZE) {
             boDataPack.add(hexStr);
+        }
+    }
+
+    /**
+     * 打包bp数据包
+     * 打包是否完成由list.size决定
+     *
+     * @param hexStr -可能的数据包元素
+     * */
+    private void packBpData(String hexStr) {
+        //应答包判断
+        if (hexStr.equals("04") && bpAckDataPack.isEmpty()) {
+            bpAckDataPack.add(hexStr);
+        } else if (bpAckDataPack.size() >= 1 && bpAckDataPack.size() <= BP_ACK_PACK_SIZE) {
+            bpAckDataPack.add(hexStr);
+        }
+
+        //状态包判断
+        if (hexStr.equals("24") && bpStsDataPack.isEmpty()) {
+            bpStsDataPack.add(hexStr);
+        } else if (bpStsDataPack.size() >= 1 && bpStsDataPack.size() <= BP_STS_PACK_SIZE) {
+            bpStsDataPack.add(hexStr);
         }
     }
 
