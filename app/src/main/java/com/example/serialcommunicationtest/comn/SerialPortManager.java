@@ -116,6 +116,7 @@ public class SerialPortManager {
     public void sendCommand(String command) {
         try {
             SerialPortManager.instance().sendData(DataConversionUtils.hexStr2bytes(command));
+            Log.e(TAG, "发送：" + command + " 成功");
         } catch (Exception e) {
             Log.e("发送：" + command + " 失败", e.toString());
         }

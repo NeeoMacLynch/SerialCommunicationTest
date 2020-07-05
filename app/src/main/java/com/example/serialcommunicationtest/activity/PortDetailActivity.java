@@ -171,25 +171,10 @@ public class PortDetailActivity extends AppCompatActivity {
         if (isOpened) {
             new Thread(() -> {
 
-                //发送0x59
-                SerialPortManager.instance().sendCommand(Objects.requireNonNull(CMD_NBP.get("CMD_NBP_RESET")).getCommand());
 
-                try {
-                    Thread.sleep(3000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                //发送0x57 0x01
-                SerialPortManager.instance().sendCommand(
-                        Objects.requireNonNull(CMD_NBP.get("CMD_NBP_PERIOD")).getCommand()
-                                + " " +
-                                Objects.requireNonNull(CMD_NBP.get("CMD_NBP_PERIOD")).getMode(1)
-                );
+                //发送0x5A漏气检测命令
+                SerialPortManager.instance().sendCommand(Objects.requireNonNull(CMD_NBP.get("CMD_NBP_PNEUMATIC")).getCommand());
 
-                //发送0x55
-                SerialPortManager.instance().sendCommand(Objects.requireNonNull(CMD_NBP.get("CMD_NBP_START")).getCommand());
-
-                //TODO: 2020/7/3 测试是否漏气
 
             }).start();
         } else {

@@ -86,7 +86,7 @@ public class SerialReadThread extends Thread {
         String flag = "BloodPressureRunnable";
         packBpData(DataProcessingUtils.onDataReceive(received, size, flag));
         //应答包解析
-        if (bpAckDataPack.size() == BP_ACK_PACK_SIZE) {
+        if (BP_ACK_PACK_SIZE == bpAckDataPack.size()) {
             if (DataProcessingUtils.checkDataPack(bpAckDataPack)) {
                 String ackMessage;
                 ackMessage = DataProcessingUtils.unPackBpData(bpAckDataPack);
@@ -95,6 +95,17 @@ public class SerialReadThread extends Thread {
                 PortDetailActivity.handler.sendMessage(msg);
             }
             bpAckDataPack.clear();
+        }
+        //状态包解析
+        if (BP_STS_PACK_SIZE == bpStsDataPack.size()) {
+            if (DataProcessingUtils.checkDataPack(bpStsDataPack)) {
+                String ackMessage;
+                ackMessage = DataProcessingUtils.unPackBpData(bpStsDataPack);
+                Message msg = Message.obtain();
+                msg.obj = "设备状态：" + ackMessage;
+                PortDetailActivity.handler.sendMessage(msg);
+            }
+            bpStsDataPack.clear();
         }
 
 
