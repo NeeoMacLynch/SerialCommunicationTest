@@ -30,6 +30,14 @@ public class SerialReadThread extends Thread {
     private static final int BP_ACK_PACK_SIZE = 5;
     private ArrayList<String> bpStsDataPack = new ArrayList<>();
     private static final int BP_STS_PACK_SIZE = 8;
+    private ArrayList<String> bpCufPreDataPack = new ArrayList<>();
+    private static final int BP_CUF_PRE_PACK_SIZE = 8;
+    private ArrayList<String> bpEndDataPack = new ArrayList<>();
+    private static final int BP_END_PACK_SIZE = 4;
+    private ArrayList<String> bpResult1DataPack = new ArrayList<>();
+    private static final int BP_RESULT1_PACK_SIZE = 9;
+    private ArrayList<String> bpResult2DataPack = new ArrayList<>();
+    private static final int BP_RESULT2_PACK_SIZE = 5;
 
     private ArrayList<String> theDataPack = new ArrayList<>();
 
@@ -96,6 +104,23 @@ public class SerialReadThread extends Thread {
             }
             bpAckDataPack.clear();
         }
+
+        //实时数据包解析
+        if (BP_CUF_PRE_PACK_SIZE == bpCufPreDataPack.size()) {
+            if (DataProcessingUtils.checkDataPack(bpCufPreDataPack)) {
+                String ackMessage;
+                ackMessage = DataProcessingUtils.unPackBpData(bpCufPreDataPack);
+                Message msg = Message.obtain();
+                if ("非新生儿模式下检测到新生儿袖带".equals(ackMessage)) {
+                    msg.obj = ackMessage;
+                } else {
+                    msg.obj = "实时血压记录：" + ackMessage;
+                }
+                PortDetailActivity.handler.sendMessage(msg);
+            }
+            bpCufPreDataPack.clear();
+        }
+
         //状态包解析
         if (BP_STS_PACK_SIZE == bpStsDataPack.size()) {
             if (DataProcessingUtils.checkDataPack(bpStsDataPack)) {
@@ -107,7 +132,6 @@ public class SerialReadThread extends Thread {
             }
             bpStsDataPack.clear();
         }
-
 
     };
 
@@ -227,12 +251,41 @@ public class SerialReadThread extends Thread {
             bpAckDataPack.add(hexStr);
         }
 
+        //实时数据包判断
+        if (hexStr.equals("20") && bpCufPreDataPack.isEmpty()) {
+            bpCufPreDataPack.add(hexStr);
+        } else if (bpCufPreDataPack.size() >= 1 && bpCufPreDataPack.size() <= BP_CUF_PRE_PACK_SIZE) {
+            bpCufPreDataPack.add(hexStr);
+        }
+
+        //结束包判断
+        if (hexStr.equals("21") && bpEndDataPack.isEmpty()) {
+            bpEndDataPack.add(hexStr);
+        } else if (bpEndDataPack.size() >= 1 && bpEndDataPack.size() <= BP_END_PACK_SIZE) {
+            bpEndDataPack.add(hexStr);
+        }
+
+        //结果包1判断
+        if (hexStr.equals("22") && bpResult1DataPack.isEmpty()) {
+            bpResult1DataPack.add(hexStr);
+        } else if (bpResult1DataPack.size() >= 1 && bpResult1DataPack.size() <= BP_RESULT1_PACK_SIZE) {
+            bpResult1DataPack.add(hexStr);
+        }
+
+        //结果包2判断
+        if (hexStr.equals("23") && bpResult2DataPack.isEmpty()) {
+            bpResult2DataPack.add(hexStr);
+        } else if (bpResult2DataPack.size() >= 1 && bpResult2DataPack.size() <= BP_RESULT2_PACK_SIZE) {
+            bpResult2DataPack.add(hexStr);
+        }
+
         //状态包判断
         if (hexStr.equals("24") && bpStsDataPack.isEmpty()) {
             bpStsDataPack.add(hexStr);
         } else if (bpStsDataPack.size() >= 1 && bpStsDataPack.size() <= BP_STS_PACK_SIZE) {
             bpStsDataPack.add(hexStr);
         }
+
     }
 
     /**

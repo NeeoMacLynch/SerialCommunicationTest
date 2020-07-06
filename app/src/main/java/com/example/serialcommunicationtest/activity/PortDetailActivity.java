@@ -206,6 +206,10 @@ public class PortDetailActivity extends AppCompatActivity {
             public void handleMessage(@NonNull Message msg) {
                 //已屏蔽重复初始值
                 String resStr = msg.obj.toString();
+                if ("非新生儿模式下检测到新生儿袖带".equals(resStr)){
+                    //发送0x56测量终止命令
+                    SerialPortManager.instance().sendCommand(Objects.requireNonNull(CMD_NBP.get("CMD_NBP_END")).getCommand());
+                }
                 if (!"2047 2047 ".equals(resStr) && !"脉率：0，血氧：0".equals(resStr)){
                     initMsgList(resStr);
                 }

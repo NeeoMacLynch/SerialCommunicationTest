@@ -1,9 +1,10 @@
 package com.example.serialcommunicationtest.util;
 
 import android.util.Log;
-import android.widget.Switch;
 
+import com.example.serialcommunicationtest.bean.BPStsData;
 import com.example.serialcommunicationtest.bean.BloodOxygenData;
+import com.example.serialcommunicationtest.bean.BPCufPreData;
 
 import java.util.ArrayList;
 
@@ -44,9 +45,31 @@ public class DataProcessingUtils {
             int item = Integer.parseInt(dataPack.get(position+1), 16) & 0x7F;
             String realItem = Integer.toHexString(item | high);
             if (realItem.length() == 1) realItem = "0" + realItem;
-            dataPack.set(position+1, realItem);
+            dataPack.set(position + 1, realItem);
         }
+    }
 
+    /**
+     * 从8位十六进制数取得有符号数
+     *
+     * @param hexStr -目标十六进制
+     * @return 整型有符号数
+     * */
+    private static int getSignedFrom8BitsHex(String hexStr) {
+        int unSignedData = Integer.parseInt(hexStr, 16);
+        return (1 == (unSignedData & 0x80 >> 7))? -(unSignedData & 0x7F) : (unSignedData & 0x7F);
+    }
+
+    /**
+     * 从16位十六进制数取得有符号数
+     *
+     * @param highByte -高字节
+     * @param lowByte -低字节
+     * @return 整型有符号数
+     * */
+    private static int getSignedFrom16BitsHex(String highByte, String lowByte) {
+        int unSignedData = Integer.parseInt(highByte + lowByte, 16);
+        return (1 == (unSignedData & 0x8000 >> 15))? -(unSignedData & 0x7FFF) : (unSignedData & 0x7FFF);
     }
 
     /**
@@ -82,7 +105,6 @@ public class DataProcessingUtils {
      * */
     public static BloodOxygenData unPackBoData(ArrayList<String> boDataPack) {
         BloodOxygenData bloodOxygenData;
-        // TODO：2020/7/3 负数数据也要解析，可能需要在真值转换中加入负数部分的判断处理
 
         //数据头不为0x80，数据无效
         if (!"80".equals(boDataPack.get(1))) {
@@ -101,8 +123,8 @@ public class DataProcessingUtils {
             isSearchTimeTooLongOrNot = (stateItem & 0x10) >> 4;
             signalStrength = stateItem & 0x0F;
 
-            pulseRate = Integer.parseInt(boDataPack.get(3) + boDataPack.get(4), 16) & 0x7F;
-            bloodOxygen = Integer.parseInt(boDataPack.get(5), 16) & 0x7F;
+            pulseRate = getSignedFrom16BitsHex(boDataPack.get(3), boDataPack.get(4));
+            bloodOxygen = getSignedFrom8BitsHex(boDataPack.get(5));
 
             bloodOxygenData = new BloodOxygenData(isBoDownOrNot, isSearchTimeTooLongOrNot, signalStrength, pulseRate, bloodOxygen);
         }
@@ -110,6 +132,13 @@ public class DataProcessingUtils {
         return bloodOxygenData;
     }
 
+    /**
+     * 解析bp数据包
+     * 按照包头判断不同的包
+     *
+     * @param bpDataPack -目标数据包
+     * */
+    // TODO：2020/7/6 将返回类型改为object
     public static String unPackBpData(ArrayList<String> bpDataPack) {
         String messageStr;
         getRealData(bpDataPack);
@@ -130,79 +159,95 @@ public class DataProcessingUtils {
                 messageStr = ackMessage[position];
                 break;
             }
+
+            case "20" : {
+                //优先判断袖带错误信息
+                int wrongFlag = Integer.parseInt(bpDataPack.get(4), 16);
+                if (1 == wrongFlag) {
+                    messageStr = "非新生儿模式下检测到新生儿袖带";
+                    break;
+                }
+
+                BPCufPreData bpRealTimeData;
+                int pressureData = getSignedFrom16BitsHex(bpDataPack.get(2), bpDataPack.get(3));
+                //计算测量类型
+                int measureTypePosition =  Integer.parseInt(bpDataPack.get(5), 16);
+                bpRealTimeData = new BPCufPreData(pressureData, measureTypePosition);
+                messageStr = bpRealTimeData.getRealTimeData();
+
+                break;
+            }
+
+            case "21" : {
+                String flag = "结束包消息：";
+
+                String[] wrongList = {
+                        "在手动测量方式下测量结束",
+                        "在自动测量方式下测量结束",
+                        "STAT测量结束",
+                        "在校准方式下测量结束",
+                        "在漏气检测中测量结束"
+                };
+                int wrongPosition = Integer.parseInt(bpDataPack.get(2), 16);
+                if (10 != wrongPosition) {
+                    messageStr = wrongList[wrongPosition];
+                } else {
+                    messageStr = "系统错误";
+                    Log.e(TAG, flag + "错误信息见NBP状态包");
+                }
+
+                break;
+            }
+
+            case "22" : {
+                // TODO：2020/7/6 未判断-100与数据范围
+                int SP = getSignedFrom16BitsHex(bpDataPack.get(2), bpDataPack.get(3));  //收缩压
+                int DP = getSignedFrom16BitsHex(bpDataPack.get(4), bpDataPack.get(5));  //舒张压
+                int MAP = getSignedFrom16BitsHex(bpDataPack.get(6), bpDataPack.get(7)); //平均压
+                messageStr =
+                        "收缩压：" + SP + "\n" +
+                        "舒张压" + DP + "\n" +
+                        "平均压" + MAP;
+
+                break;
+            }
+
+            case "23" : {
+                // TODO：2020/7/6 未判断-100与数据范围
+                int pulseRate = getSignedFrom16BitsHex(bpDataPack.get(2), bpDataPack.get(3)); //脉率
+                messageStr = "收缩压：" + pulseRate;
+
+                break;
+            }
+
             case "24" : {
                 String flag = "状态包消息：";
 
                 //NBP状态信息获取
                 int stateData = Integer.parseInt(bpDataPack.get(2), 16);
-                String[] patientModeList = {
-                        "成人",
-                        "儿童",
-                        "新生儿"
-                };
-                int patientModePosition = (stateData & 0x30) >> 4;
-                String patientMode = "测量模式-" + patientModeList[patientModePosition];
-                //发送日志：测量模式
-                Log.i(TAG, flag + patientMode);
-                String[] stateList = {
-                        "NBP复位完成",
-                        "手动测量中",
-                        "自动测量中",
-                        "STAT测量方法中",
-                        "校验中",
-                        "漏气检测中",
-                        "NBP复位"
-                };
                 int statePosition = (stateData & 0x0F);
-                if (10 != statePosition) {
-                    messageStr = stateList[statePosition];
-                } else {
-                    String[] wrongList = {
-                            "无错误",
-                            "袖带过松",
-                            "漏气",
-                            "气压错误",
-                            "弱信号",
-                            "超范围",
-                            "过分运动",
-                            "过压",
-                            "信号饱和",
-                            "漏气检测失败",
-                            "系统错误",
-                            "超时"
-                    };
-                    int wrongPosition = Integer.parseInt(bpDataPack.get(4), 16);
-                    String wrongStr = wrongList[wrongPosition];
-                    messageStr = "系统出错" + wrongStr;
-                }
-
-                String[] cycleList = {
-                        "在手动测量方式下，",
-                        "在自动测量方式下，对应周期为1分钟，",
-                        "在自动测量方式下，对应周期为2分钟，",
-                        "在自动测量方式下，对应周期为3分钟，",
-                        "在自动测量方式下，对应周期为4分钟，",
-                        "在自动测量方式下，对应周期为5分钟，",
-                        "在自动测量方式下，对应周期为10分钟，",
-                        "在自动测量方式下，对应周期为15分钟，",
-                        "在自动测量方式下，对应周期为30分钟，",
-                        "在自动测量方式下，对应周期为1小时，",
-                        "在自动测量方式下，对应周期为1.5小时，",
-                        "在自动测量方式下，对应周期为2小时，",
-                        "在自动测量方式下，对应周期为3小时，",
-                        "在自动测量方式下，对应周期为4小时，",
-                        "在自动测量方式下，对应周期为8小时，",
-                        "在STAT测量方式下，",
-                };
+                int patientModePosition = (stateData & 0x30) >> 4;
+                int wrongPosition = Integer.parseInt(bpDataPack.get(4), 16);
                 int cyclePosition = Integer.parseInt(bpDataPack.get(3), 16);
-                String cycleStr = cycleList[cyclePosition];
                 int remainingTime = Integer.parseInt(bpDataPack.get(5) + bpDataPack.get(6), 16);
-                String cycleAndTimeMessage = cycleStr + "剩余时间：" + remainingTime + "s";
+
+                BPStsData bpStsData = new BPStsData(statePosition, wrongPosition, patientModePosition, cyclePosition, remainingTime);
+
+                //发送日志：测量模式
+                Log.i(TAG, flag + bpStsData.getPatientMode());
                 //发送日志：周期与剩余时间
-                Log.i(TAG, flag + cycleAndTimeMessage);
+                Log.i(TAG, flag + bpStsData.getCycleAndTimeMessage());
+                if (10 != statePosition) {
+                    messageStr = bpStsData.getStateStr();
+                } else {
+                    messageStr = "系统出错" + bpStsData.getWrongStr();
+                }
 
                 break;
             }
+
+
+
             default: messageStr = "打包错误";
         }
 
