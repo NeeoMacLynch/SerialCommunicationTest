@@ -75,14 +75,27 @@
     <Button
         android:layout_gravity="bottom|end"
         android:id="@+id/start_bp_switch"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="148dp"
+        android:layout_marginRight="148dp"
         android:layout_marginBottom="32dp"
         android:padding="8dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/start_bp"
         android:textColor="@color/colorPrimary"
-        android:background="@drawable/button_ripple"
-        android:layout_marginRight="16dp" />
+        android:background="@drawable/button_ripple_green" />
+
+    <Button
+        android:layout_gravity="bottom|end"
+        android:id="@+id/stop_bp_switch"
+        android:layout_marginEnd="24dp"
+        android:layout_marginRight="24dp"
+        android:layout_marginBottom="32dp"
+        android:padding="8dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/stop_bp"
+        android:textColor="@color/colorPrimary"
+        android:background="@drawable/button_ripple_red" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

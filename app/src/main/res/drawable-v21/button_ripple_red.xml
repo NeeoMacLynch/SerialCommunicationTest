@@ -6,7 +6,7 @@
             <item android:state_enabled="true">
                 <shape>
                     <corners android:radius="10dp" />
-                    <solid android:color="@color/green_light" />
+                    <solid android:color="#B43F3F" />
                 </shape>
             </item>
             <item android:state_enabled="false">

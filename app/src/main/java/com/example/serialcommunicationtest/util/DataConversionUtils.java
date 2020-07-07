@@ -66,14 +66,15 @@ public class DataConversionUtils {
 
     /**
      * 把十六进制表示的字节数组字符串，转换成十六进制字节数组
+     * 只能转不带空格的hexStr
      *
-     * @param hex -目标十六进制字符串
+     * @param hexStr -目标十六进制字符串
      * @return byte[]
      */
-    public static byte[] hexStr2bytes(String hex) {
-        int len = (hex.length() / 2);
+    public static byte[] hexStr2bytes(String hexStr) {
+        int len = (hexStr.length() / 2);
         byte[] result = new byte[len];
-        char[] chars = hex.toUpperCase().toCharArray();
+        char[] chars = hexStr.toUpperCase().toCharArray();
         for (int i = 0; i < len; i++) {
             int pos = i * 2;
             result[i] = (byte) (hexChar2byte(chars[pos]) << 4 | hexChar2byte(chars[pos + 1]));
@@ -81,8 +82,19 @@ public class DataConversionUtils {
         return result;
     }
 
+    public static byte[] hexStr2BytesWithSpace(String hexString) {
+        String[] hexStrings = hexString.split("\\s+ ");
+        byte[] bytes = new byte[hexStrings.length];
+        for (int i = 0; i < hexStrings.length; i++) {
+            char[] hexChars = hexStrings[i].toCharArray();
+            bytes[i] = (byte) (hexChar2byte(hexChars[0]) << 4 | hexChar2byte(hexChars[1]));
+        }
+        return bytes;
+    }
+
+
     /**
-     * 把16进制字符[0123456789abcde]（含大小写）转成字节
+     * 把16进制字符[0123456789abcdef]（含大小写）转成字节
      *
      * @param c -目标字符
      * @return 对应子节

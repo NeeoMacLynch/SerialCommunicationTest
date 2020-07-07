@@ -110,15 +110,16 @@ public class SerialPortManager {
 
     /**
      * 发送命令
+     * 根据命令长度检测使用不同的方法
      *
      * @param command -被发送的命令
      * */
     public void sendCommand(String command) {
         try {
             SerialPortManager.instance().sendData(DataConversionUtils.hexStr2bytes(command));
-            Log.e(TAG, "发送：" + command + " 成功");
+            Log.e(TAG, "发送：" + command + "成功");
         } catch (Exception e) {
-            Log.e("发送：" + command + " 失败", e.toString());
+            Log.e("发送：" + command + "失败", e.toString());
         }
     }
 

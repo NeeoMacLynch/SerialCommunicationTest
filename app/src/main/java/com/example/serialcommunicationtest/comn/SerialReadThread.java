@@ -31,7 +31,7 @@ public class SerialReadThread extends Thread {
     private ArrayList<String> bpStsDataPack = new ArrayList<>();
     private static final int BP_STS_PACK_SIZE = 8;
     private ArrayList<String> bpCufPreDataPack = new ArrayList<>();
-    private static final int BP_CUF_PRE_PACK_SIZE = 8;
+    private static final int BP_CUF_PRE_PACK_SIZE = 7;
     private ArrayList<String> bpEndDataPack = new ArrayList<>();
     private static final int BP_END_PACK_SIZE = 4;
     private ArrayList<String> bpResult1DataPack = new ArrayList<>();
@@ -60,6 +60,7 @@ public class SerialReadThread extends Thread {
             if (DataProcessingUtils.checkDataPack(ecgDataPack)){
                 //每次发送message必须重新构造message对象
                 Message msg = Message.obtain();
+                msg.what = 0; //打印标志
                 msg.obj = DataProcessingUtils.unPackEcgData(ecgDataPack);
                 //调用PortDetailActivity中的静态handler
                 PortDetailActivity.handler.sendMessage(msg);
@@ -80,6 +81,7 @@ public class SerialReadThread extends Thread {
                 bloodOxygenData = DataProcessingUtils.unPackBoData(boDataPack);
                 //可以对bo对象的属性判断并打印错误或正确信息
                 Message msg = Message.obtain();
+                msg.what = 0; //打印标志
                 msg.obj = "脉率：" + bloodOxygenData.getPulseRate() + "，血氧：" + bloodOxygenData.getBloodOxygen();
                 PortDetailActivity.handler.sendMessage(msg);
             }
@@ -95,22 +97,29 @@ public class SerialReadThread extends Thread {
         packBpData(DataProcessingUtils.onDataReceive(received, size, flag));
         //应答包解析
         if (BP_ACK_PACK_SIZE == bpAckDataPack.size()) {
+            //Log.d(TAG, flag + " 应答包打包完成");
             if (DataProcessingUtils.checkDataPack(bpAckDataPack)) {
+                //Log.d(TAG, flag + " 应答包解析通过");
                 String ackMessage;
                 ackMessage = DataProcessingUtils.unPackBpData(bpAckDataPack);
                 Message msg = Message.obtain();
+                msg.what = 1; //应答包标志
                 msg.obj = "设备应答：" + ackMessage;
-                PortDetailActivity.handler.sendMessage(msg);
+                Log.d(TAG, flag + msg.obj.toString());
+                PortDetailActivity.workHandler.sendMessage(msg);
             }
             bpAckDataPack.clear();
         }
 
         //实时数据包解析
         if (BP_CUF_PRE_PACK_SIZE == bpCufPreDataPack.size()) {
+            //Log.d(TAG, flag + " 实时数据包打包完成");
             if (DataProcessingUtils.checkDataPack(bpCufPreDataPack)) {
+                //Log.d(TAG, flag + " 实时数据包解析通过");
                 String ackMessage;
                 ackMessage = DataProcessingUtils.unPackBpData(bpCufPreDataPack);
                 Message msg = Message.obtain();
+                msg.what = 0; //打印标志
                 if ("非新生儿模式下检测到新生儿袖带".equals(ackMessage)) {
                     msg.obj = ackMessage;
                 } else {
@@ -121,12 +130,66 @@ public class SerialReadThread extends Thread {
             bpCufPreDataPack.clear();
         }
 
+        //结束包解析
+        if (BP_END_PACK_SIZE == bpEndDataPack.size()) {
+            //Log.d(TAG, flag + " 结束包打包完成");
+            if (DataProcessingUtils.checkDataPack(bpEndDataPack)) {
+                //Log.d(TAG, flag + " 结束包解析通过");
+                String ackMessage;
+                ackMessage = DataProcessingUtils.unPackBpData(bpEndDataPack);
+                Message msg = Message.obtain();
+                msg.what = 0; //打印标志
+                msg.obj = "测量结束：" + ackMessage;
+                PortDetailActivity.handler.sendMessage(msg);
+            }
+            bpEndDataPack.clear();
+        }
+
+        //结果包1解析
+        if (BP_RESULT1_PACK_SIZE == bpResult1DataPack.size()) {
+            //Log.d(TAG, flag + " 结果包1打包完成");
+            if (DataProcessingUtils.checkDataPack(bpResult1DataPack)) {
+                //Log.d(TAG, flag + " 结果包1解析通过");
+                String ackMessage;
+                ackMessage = DataProcessingUtils.unPackBpData(bpResult1DataPack);
+                StringBuilder stringBuilder = new StringBuilder();
+                for (String item : bpResult1DataPack) {
+                    stringBuilder.append(item);
+                    stringBuilder.append(" ");
+                }
+                ackMessage += "\n" + stringBuilder.toString();
+                Message msg = Message.obtain();
+                msg.what = 0; //打印标志
+                msg.obj = ackMessage;
+                PortDetailActivity.handler.sendMessage(msg);
+            }
+            bpResult1DataPack.clear();
+        }
+
+        //结果包2解析
+        if (BP_RESULT2_PACK_SIZE == bpResult2DataPack.size()) {
+            //Log.d(TAG, flag + " 结果包1打包完成");
+            if (DataProcessingUtils.checkDataPack(bpResult2DataPack)) {
+                //Log.d(TAG, flag + " 结果包1解析通过");
+                String ackMessage;
+                ackMessage = DataProcessingUtils.unPackBpData(bpResult2DataPack);
+                Message msg = Message.obtain();
+                msg.what = 0; //打印标志
+                msg.obj = ackMessage;
+                PortDetailActivity.handler.sendMessage(msg);
+            }
+            bpResult2DataPack.clear();
+        }
+
         //状态包解析
         if (BP_STS_PACK_SIZE == bpStsDataPack.size()) {
+            //Log.d(TAG, flag + " 状态包打包完成");
             if (DataProcessingUtils.checkDataPack(bpStsDataPack)) {
+                //Log.d(TAG, flag + " 状态包解析通过");
                 String ackMessage;
                 ackMessage = DataProcessingUtils.unPackBpData(bpStsDataPack);
                 Message msg = Message.obtain();
+                msg.what = 0; //打印标志
                 msg.obj = "设备状态：" + ackMessage;
                 PortDetailActivity.handler.sendMessage(msg);
             }
@@ -145,6 +208,7 @@ public class SerialReadThread extends Thread {
         if(packTheData(hexStr)){
             //每次发送message必须重新构造message对象
             Message msg = Message.obtain();
+            msg.what = 0; //打印标志
             msg.obj = DataProcessingUtils.unPackTheData(theDataPack);
             //调用PortDetailActivity中的静态handler
             PortDetailActivity.handler.sendMessage(msg);

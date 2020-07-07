@@ -42,7 +42,7 @@ public class DataProcessingUtils {
         //减3减去的是包头、数据头、校验位
         for (int position = 1; position <= dataPack.size() - 3; position++) {
             int high = (head & (0x01 << position - 1)) << (8 - position);
-            int item = Integer.parseInt(dataPack.get(position+1), 16) & 0x7F;
+            int item = Integer.parseInt(dataPack.get(position + 1), 16) & 0x7F;
             String realItem = Integer.toHexString(item | high);
             if (realItem.length() == 1) realItem = "0" + realItem;
             dataPack.set(position + 1, realItem);
@@ -69,7 +69,7 @@ public class DataProcessingUtils {
      * */
     private static int getSignedFrom16BitsHex(String highByte, String lowByte) {
         int unSignedData = Integer.parseInt(highByte + lowByte, 16);
-        return (1 == (unSignedData & 0x8000 >> 15))? -(unSignedData & 0x7FFF) : (unSignedData & 0x7FFF);
+        return (1 == (unSignedData & 0x8000 >> 15))? -(unSignedData & 0x7FFF) : unSignedData;
     }
 
     /**
@@ -142,7 +142,6 @@ public class DataProcessingUtils {
     public static String unPackBpData(ArrayList<String> bpDataPack) {
         String messageStr;
         getRealData(bpDataPack);
-
         String[] ackMessage = {
                 "命令成功",
                 "校验和错误",
@@ -172,7 +171,7 @@ public class DataProcessingUtils {
                 int pressureData = getSignedFrom16BitsHex(bpDataPack.get(2), bpDataPack.get(3));
                 //计算测量类型
                 int measureTypePosition =  Integer.parseInt(bpDataPack.get(5), 16);
-                bpRealTimeData = new BPCufPreData(pressureData, measureTypePosition);
+                bpRealTimeData = new BPCufPreData(pressureData, measureTypePosition - 1);
                 messageStr = bpRealTimeData.getRealTimeData();
 
                 break;
@@ -190,7 +189,7 @@ public class DataProcessingUtils {
                 };
                 int wrongPosition = Integer.parseInt(bpDataPack.get(2), 16);
                 if (10 != wrongPosition) {
-                    messageStr = wrongList[wrongPosition];
+                    messageStr = wrongList[wrongPosition - 1];
                 } else {
                     messageStr = "系统错误";
                     Log.e(TAG, flag + "错误信息见NBP状态包");
@@ -204,10 +203,9 @@ public class DataProcessingUtils {
                 int SP = getSignedFrom16BitsHex(bpDataPack.get(2), bpDataPack.get(3));  //收缩压
                 int DP = getSignedFrom16BitsHex(bpDataPack.get(4), bpDataPack.get(5));  //舒张压
                 int MAP = getSignedFrom16BitsHex(bpDataPack.get(6), bpDataPack.get(7)); //平均压
-                messageStr =
-                        "收缩压：" + SP + "\n" +
-                        "舒张压" + DP + "\n" +
-                        "平均压" + MAP;
+                messageStr = "收缩压：" + SP + "\n" +
+                        "舒张压：" + DP + "\n" +
+                        "平均压：" + MAP ;
 
                 break;
             }
@@ -215,7 +213,7 @@ public class DataProcessingUtils {
             case "23" : {
                 // TODO：2020/7/6 未判断-100与数据范围
                 int pulseRate = getSignedFrom16BitsHex(bpDataPack.get(2), bpDataPack.get(3)); //脉率
-                messageStr = "收缩压：" + pulseRate;
+                messageStr = "脉率：" + pulseRate;
 
                 break;
             }
