@@ -246,6 +246,7 @@ public class PortDetailActivity extends AppCompatActivity {
 
     /**
      * 收取信息
+     * define
      */
     private void getMessage() {
 

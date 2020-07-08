@@ -57,7 +57,7 @@ public class DataProcessingUtils {
      * */
     private static int getSignedFrom8BitsHex(String hexStr) {
         int unSignedData = Integer.parseInt(hexStr, 16);
-        return (1 == (unSignedData & 0x80 >> 7))? -(unSignedData & 0x7F) : (unSignedData & 0x7F);
+        return (1 == ((unSignedData & 0x80) >> 7))? -(unSignedData & 0x7F) : (unSignedData & 0x7F);
     }
 
     /**
@@ -69,7 +69,7 @@ public class DataProcessingUtils {
      * */
     private static int getSignedFrom16BitsHex(String highByte, String lowByte) {
         int unSignedData = Integer.parseInt(highByte + lowByte, 16);
-        return (1 == (unSignedData & 0x8000 >> 15))? -(unSignedData & 0x7FFF) : unSignedData;
+        return (1 == ((unSignedData & 0x8000) >> 15))? -(unSignedData & 0x7FFF) : unSignedData;
     }
 
     /**
